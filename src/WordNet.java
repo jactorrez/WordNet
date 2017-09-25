@@ -3,10 +3,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public class WordNet {
-	public ArrayList<String> nounById = new ArrayList<>();
+	public ArrayList<String> nounsById = new ArrayList<>();
 	public HashMap<String,ArrayList<Integer>> synonymSets = new HashMap<>(50000);
 	
 	/*
@@ -18,27 +20,29 @@ public class WordNet {
 			
 			while(synsetsFile.hasNextLine()){
 				String[] synset = synsetsFile.nextLine().split(",");
-				int index = Integer.parseInt(synset[0]);
-				String synonyms = synset[1];
+				int id = Integer.parseInt(synset[0]);
+				String allSynonyms = synset[1];
 				String[] splitSynonyms = synset[1].split(" ");
 				
 				// populate arraylist with unsplit synonym set
-				nounById.add(synonyms);
+				nounsById.add(allSynonyms);
 				
 				// populate hashtable with split synonym set
 				for (String s : splitSynonyms){
 					ArrayList<Integer> list = synonymSets.get(s);
 					
 					if(list != null){
-						list.add(index);
+						list.add(id);
 					} else{
 						synonymSets.put(s, new ArrayList<Integer>());
-						synonymSets.get(s).add(index);						
+						synonymSets.get(s).add(id);						
 					}
-				}
+				}	
+				
+				
+				// creating hypernym graph
 				
 			}
-
 		} catch(FileNotFoundException e1){
 			e1.printStackTrace();
 		}
@@ -48,14 +52,24 @@ public class WordNet {
 	 * Returns all WordNet nouns
 	 */
 	public Iterable<String> nouns(){
-		return new ArrayList<String>();
+		Set<String> temp_nouns = new HashSet<>();
+		ArrayList<String> nouns;
+		for(String group : nounsById){
+			for(String noun : group.split(" ")){
+				temp_nouns.add(noun);
+			}
+		}
+		nouns = new ArrayList<>(temp_nouns);
+		
+		return nouns;
 	}
 	
 	/*
 	 * Is the word a WordNet noun?
 	 */
 	public boolean isNoun(String word){
-		return false;
+		boolean found = synonymSets.get(word) != null ? true : false;
+		return found;
 	}
 	
 	/*
@@ -76,6 +90,9 @@ public class WordNet {
 	// Unit testing
 	public static void main(String[] args) {
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");	
+		ArrayList<String> test = (ArrayList<String>) wn.nouns();
+		System.out.println(test.size());
+		
 	}
 
 }
