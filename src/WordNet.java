@@ -6,15 +6,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+import structs.graphs.AdjacencyMapGraph;
+import structs.graphs.Vertex;
 
 public class WordNet {
 	public ArrayList<String> nounsById = new ArrayList<>();
+	public ArrayList<Vertex<Integer>> vertexById = new ArrayList<>();
 	public HashMap<String,ArrayList<Integer>> synonymSets = new HashMap<>(50000);
+	public AdjacencyMapGraph<Integer, Boolean> wordNet = new AdjacencyMapGraph<>(true);
+	private boolean isRooted = false;
 	
 	/*
 	 * Constructor takes the name of the two input files
 	 */
 	public WordNet(String synsets, String hypernyms){
+		if(synsets == null || hypernyms == null)
+			throw new NullPointerException();
+		
 		try(Scanner synsetsFile = new Scanner(new BufferedReader(new FileReader(synsets)));
 			Scanner hypernymsFile = new Scanner(new BufferedReader(new FileReader(hypernyms)))){
 			
@@ -27,6 +35,9 @@ public class WordNet {
 				// populate arraylist with unsplit synonym set
 				nounsById.add(allSynonyms);
 				
+				// adding vertices to graph and maintaining reference to vertex created
+				vertexById.add(wordNet.insertVertex(id));
+
 				// populate hashtable with split synonym set
 				for (String s : splitSynonyms){
 					ArrayList<Integer> list = synonymSets.get(s);
@@ -38,11 +49,29 @@ public class WordNet {
 						synonymSets.get(s).add(id);						
 					}
 				}	
-				
-				
-				// creating hypernym graph
-				
 			}
+			
+			while(hypernymsFile.hasNextLine()){
+				String[] hypernymSet = hypernymsFile.nextLine().split(",");
+				int length = hypernymSet.length;
+				
+				if(length == 1)
+					isRooted = true;
+				
+				int fromId = Integer.parseInt(hypernymSet[0]);
+				Vertex<Integer> v = (Vertex<Integer>) vertexById.get(fromId);
+				
+				for(int i = 1; i < length; i++){
+					int toId = Integer.parseInt(hypernymSet[i]);
+					Vertex<Integer> w = (Vertex<Integer>) vertexById.get(toId);
+					wordNet.insertEdge(v, w, true);	
+				}
+			}
+			
+			if(isRooted == false)
+				throw new IllegalArgumentException("Input does not correspond to a rooted DAG");
+			
+			
 		} catch(FileNotFoundException e1){
 			e1.printStackTrace();
 		}
@@ -76,6 +105,8 @@ public class WordNet {
 	 * Distance between nounA and nounB (defined below)
 	 */
 	public int distance(String nounA, String nounB){
+		if(!isNoun(nounA)|| !isNoun(nounB))
+			throw new IllegalArgumentException("A noun which is not in any synset was given");
 		return 5;
 	}
 	
@@ -84,15 +115,14 @@ public class WordNet {
 	 * in a shortest ancestral path (defined below)
 	 */
 	public String sap(String nounA, String nounB){
+		if(!isNoun(nounA)|| !isNoun(nounB))
+			throw new IllegalArgumentException("A noun which is not in any synset was given");
 		return nounB;
 	}
 	
 	// Unit testing
 	public static void main(String[] args) {
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");	
-		ArrayList<String> test = (ArrayList<String>) wn.nouns();
-		System.out.println(test.size());
-		
 	}
 
 }
