@@ -6,14 +6,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
-import structs.graphs.AdjacencyMapGraph;
 import structs.graphs.Vertex;
 
 public class WordNet {
 	public ArrayList<String> nounsById = new ArrayList<>();
 	public ArrayList<Vertex<Integer>> vertexById = new ArrayList<>();
 	public HashMap<String,ArrayList<Integer>> synonymSets = new HashMap<>(50000);
-	public AdjacencyMapGraph<Integer, Boolean> wordNet = new AdjacencyMapGraph<>(true);
+	public Digraph<Integer, Boolean> wordNet = new Digraph<>(true);
 	private boolean isRooted = false;
 	
 	/*
@@ -36,7 +35,7 @@ public class WordNet {
 				nounsById.add(allSynonyms);
 				
 				// adding vertices to graph and maintaining reference to vertex created
-				vertexById.add(wordNet.insertVertex(id));
+				vertexById.add(wordNet.insertVertexByEl(id));
 
 				// populate hashtable with split synonym set
 				for (String s : splitSynonyms){
@@ -69,8 +68,7 @@ public class WordNet {
 			}
 			
 			if(isRooted == false)
-				throw new IllegalArgumentException("Input does not correspond to a rooted DAG");
-			
+				throw new IllegalArgumentException("Input does not correspond to a rooted DAG");	
 			
 		} catch(FileNotFoundException e1){
 			e1.printStackTrace();
@@ -105,14 +103,21 @@ public class WordNet {
 	 * Distance between nounA and nounB (defined below)
 	 */
 	public int distance(String nounA, String nounB){
-		if(!isNoun(nounA)|| !isNoun(nounB))
+		if(!isNoun(nounA)|| !isNoun(nounB)) 
 			throw new IllegalArgumentException("A noun which is not in any synset was given");
+		SAP sap = new SAP(wordNet);
+		
+		ArrayList<Integer> nounASets = synonymSets.get(nounA);
+		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
+		
+		sap.length(nounASets, nounBSets);
+		
 		return 5;
 	}
 	
 	/*
 	 * A synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
-	 * in a shortest ancestral path (defined below)
+	 * in a shortest ancestral path
 	 */
 	public String sap(String nounA, String nounB){
 		if(!isNoun(nounA)|| !isNoun(nounB))
