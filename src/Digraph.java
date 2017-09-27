@@ -48,6 +48,18 @@ public class Digraph<V,E> extends AdjacencyMapGraph<V,E>{
 		}
 	}
 	
+	private void DFS(Vertex<V> v, Map<Vertex<V>, Boolean> marked){
+		marked.put(v, true);
+		for(Edge<E> e : outgoingEdges(v)){
+			Vertex<V> w= opposite(v, e);
+			if(!marked.get(w)){
+				DFS(w, marked);
+			}
+		}
+	}
+	
+	private void BFS(Vertex<V> v, )
+	
 	public boolean isDAG(){
 		boolean hasSource = findSource();
 		
