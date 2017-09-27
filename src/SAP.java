@@ -11,7 +11,7 @@ public class SAP {
 	
 	// Is the digraph a directed acyclic graph? 
 	public boolean isDAG(){
-		return graph.isDAG();
+		return (graph.isDirected() && graph.isDAG());
 	}
 	
 	// Is the digraph a rooted DAG?

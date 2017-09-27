@@ -1,31 +1,63 @@
-import structs.graphs.AdjacencyMapGraph;
-import structs.graphs.Edge;
-import structs.graphs.Vertex;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import structs.graphs.AdjacencyMapGraph;
+import structs.graphs.Edge;
+import structs.graphs.Vertex;
+
 public class Digraph<V,E> extends AdjacencyMapGraph<V,E>{
 	
-	public Digraph(boolean isDirected){
-		super(isDirected);
+	public Digraph(){
+		super(true);
 	}
 	
 	public boolean isRooted(){
-		boolean isRooted = false;
-		
 		for(Vertex<V> v : vertices()){
-			if(outDegree(v) == 0)
-				isRooted = true;
+			if(outDegree(v) == 0){
+				if(isConnected(v)){
+					return true;
+				}
+			}	
+		} 
+
+		return false;
+	}
+	
+	private boolean isConnected(Vertex<V> v){
+		HashMap<Vertex<V>, Boolean> marked = new HashMap<>();
+		Integer markCount = 0;
+		int verticesCount = numVertices();
+		
+		reverseDFS(v, marked, markCount);
+		if(markCount == verticesCount){
+			return true;
 		}
 		
-		return isRooted;
+		return false;
+	}
+	
+	private void reverseDFS(Vertex<V> v, Map<Vertex<V>, Boolean> marked, Integer markCount){
+		marked.put(v, true);
+		markCount++;
+		for(Edge<E> e : incomingEdges(v)){
+			Vertex<V> w = opposite(v, e);
+			if(!marked.get(w)){
+				reverseDFS(w, marked, markCount);
+			}
+		}
 	}
 	
 	public boolean isDAG(){
+		boolean hasSource = findSource();
+		
+		if(!hasSource)
+			return false;
+		
 		boolean isAcyclic = true;
 		HashMap<Vertex<V>, Boolean> visited = new HashMap<>();
 		HashMap<Vertex<V>, Boolean> visiting = new HashMap<>();
-		
+
 		for(Vertex<V> v : vertices()){
 			visited.put(v, false);
 		}
@@ -39,6 +71,20 @@ public class Digraph<V,E> extends AdjacencyMapGraph<V,E>{
 		}
 		
 		return isAcyclic;
+	}
+	
+	/* Quick way to check if the graph contains a cycle */
+	public boolean findSource(){
+		boolean found = false;
+		
+		for(Vertex<V> v : vertices()){
+			if(inDegree(v) == 0){
+				found = true;
+				break;
+			}
+		}
+		
+		return found;
 	}
 	
 	public boolean findCycle(Vertex<V> source, Map<Vertex<V>, Boolean> visited, Map<Vertex<V>, Boolean> visiting){

@@ -12,7 +12,7 @@ public class WordNet {
 	public ArrayList<String> nounsById = new ArrayList<>();
 	public ArrayList<Vertex<Integer>> vertexById = new ArrayList<>();
 	public HashMap<String,ArrayList<Integer>> synonymSets = new HashMap<>(50000);
-	public Digraph<Integer, Boolean> wordNet = new Digraph<>(true);
+	public Digraph<Integer, Boolean> wordNet = new Digraph<>();
 	private boolean isRooted = false;
 	
 	/*
@@ -122,6 +122,14 @@ public class WordNet {
 	public String sap(String nounA, String nounB){
 		if(!isNoun(nounA)|| !isNoun(nounB))
 			throw new IllegalArgumentException("A noun which is not in any synset was given");
+		
+		SAP sap = new SAP(wordNet);
+		
+		ArrayList<Integer> nounASets = synonymSets.get(nounA);
+		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
+		
+		sap.length(nounASets, nounBSets);
+		
 		return nounB;
 	}
 	
