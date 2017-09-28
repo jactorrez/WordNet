@@ -26,26 +26,28 @@ public class Digraph<V,E> extends AdjacencyMapGraph<V,E>{
 	
 	private boolean isConnected(Vertex<V> v){
 		HashMap<Vertex<V>, Boolean> marked = new HashMap<>();
-		Integer markCount = 0;
+		int count = 0;
 		int verticesCount = numVertices();
 		
-		reverseDFS(v, marked, markCount);
-		if(markCount == verticesCount){
+		count = reachableNodes(v, marked, count);
+		if(count == verticesCount){
 			return true;
 		}
 		
 		return false;
 	}
 	
-	private void reverseDFS(Vertex<V> v, Map<Vertex<V>, Boolean> marked, Integer markCount){
+	private int reachableNodes(Vertex<V> v, Map<Vertex<V>, Boolean> marked, Integer markCount){
 		marked.put(v, true);
 		markCount++;
+		
 		for(Edge<E> e : incomingEdges(v)){
 			Vertex<V> w = opposite(v, e);
-			if(!marked.get(w)){
-				reverseDFS(w, marked, markCount);
+			if(marked.get(w) == null){
+				markCount = reachableNodes(w, marked, markCount);
 			}
 		}
+		return markCount;
 	}
 	
 	private void DFS(Vertex<V> v, Map<Vertex<V>, Boolean> marked){
@@ -57,8 +59,6 @@ public class Digraph<V,E> extends AdjacencyMapGraph<V,E>{
 			}
 		}
 	}
-	
-	private void BFS(Vertex<V> v, )
 	
 	public boolean isDAG(){
 		boolean hasSource = findSource();
