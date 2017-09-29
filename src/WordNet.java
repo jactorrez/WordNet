@@ -12,7 +12,7 @@ public class WordNet {
 	public ArrayList<String> setById = new ArrayList<>();
 	public ArrayList<Vertex<Integer>> vertexById = new ArrayList<>();
 	public HashMap<String, ArrayList<Integer>> synonymSets = new HashMap<>(50000);
-	public Digraph<Integer, Boolean> wordNet = new Digraph<>();
+	public Digraph<Boolean> wordNet = new Digraph<>();
 	
 	/*
 	 * Constructor takes the name of the two input files
@@ -107,7 +107,7 @@ public class WordNet {
 		if((nounA == null || nounB == null) || (!isNoun(nounA)|| !isNoun(nounB))) 
 			throw new IllegalArgumentException("The noun given was either null or does not exist in the wordnet graph");
 		
-		SAP<Integer> sap = new SAP<>(wordNet);
+		SAP sap = new SAP(wordNet);
 		
 		ArrayList<Integer> nounASets = synonymSets.get(nounA);
 		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
@@ -130,13 +130,12 @@ public class WordNet {
 		if(!isNoun(nounA)|| !isNoun(nounB))
 			throw new IllegalArgumentException("A noun which is not in any synset was given");
 		
-		SAP<Integer> sap = new SAP<>(wordNet);
+		SAP sap = new SAP(wordNet);
 		
 		ArrayList<Integer> nounASets = synonymSets.get(nounA);
 		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
 		
 		int ancestor = sap.ancestor(nounASets, nounBSets);
-		System.out.println("ancestor returned: " + ancestor);
 		
 		if(ancestor == -1){
 			System.out.println("No common ancestor found");
@@ -151,7 +150,7 @@ public class WordNet {
 	// Unit testing
 	public static void main(String[] args) {
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");	
-		System.out.println(wn.distance("transgression", "opposition"));
+		//System.out.println(wn.distance("transgression", "opposition"));
 	}
 
 }

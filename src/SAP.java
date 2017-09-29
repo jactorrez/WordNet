@@ -1,15 +1,20 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Scanner;
+
 import structs.graphs.Edge;
 import structs.graphs.Vertex;
 
-public class SAP<V> {
-	Digraph<V, Boolean> graph;
+public class SAP {
+	Digraph<Boolean> graph;
 
 	// Constructor takes Digraph (not necessarily a DAG)
-	public SAP(Digraph<V, Boolean> G){
+	public SAP(Digraph<Boolean> G){
 		this.graph = G;
 	}
 	
@@ -24,54 +29,54 @@ public class SAP<V> {
 	}
 	
 	// Length of shortest ancestral path between v and w; -1 if no such path
-	public int length(V v, V w){
-		ArrayList<V> listA = new ArrayList<>(); 
+	public int length(int v, int w){
+		ArrayList<Integer> listA = new ArrayList<>(); 
 		listA.add(v);
 		
-		ArrayList<V> listB = new ArrayList<>();
+		ArrayList<Integer> listB = new ArrayList<>();
 		listB.add(w);
 		
 		return length(listA, listB);
 	}
 	
 	// A common ancestor of v and w that participates in a shortest ancestral path
-	public V ancestor(V v, V w){
-		ArrayList<V> listA = new ArrayList<>(); 
+	public int ancestor(int v, int w){
+		ArrayList<Integer> listA = new ArrayList<>(); 
 		listA.add(v);
-		
-		ArrayList<V> listB = new ArrayList<>();
+		ArrayList<Integer> listB = new ArrayList<>();
 		listB.add(w);
 		
 		return ancestor(listA, listB);
 	}
 	
 	// Length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
-	public int length(Iterable<V> v, Iterable<V> w){
+	public int length(Iterable<Integer> v, Iterable<Integer> w){
 		CommonAncestor ancestor = findCommonAncestor(v, w);
 		int length = ancestor.getDistance();
 		return length;
 	}
 	
 	// A common ancestor that participates in shortest ancestral path; -1 if no such path
-	public V ancestor(Iterable<V> v, Iterable<V> w){
+	public int ancestor(Iterable<Integer> v, Iterable<Integer> w){
 		CommonAncestor ancestor = findCommonAncestor(v, w);
 		if(ancestor.getAncestor() == null)
-			return (V) new Integer(-1);
+			return -1;
 		
-		V vertex = ancestor.getAncestor().getElement();
+		int vertex = ancestor.getAncestor().getElement();
 		
 		return vertex;
 	}
 	
-	private CommonAncestor findCommonAncestor(Iterable<V> listA, Iterable<V> listB){
-		HashMap<Vertex<V>, Integer> ancestors = new HashMap<>();
+	private CommonAncestor findCommonAncestor(Iterable<Integer> listA, Iterable<Integer> listB){
+		HashMap<Vertex<Integer>, Integer> ancestors = new HashMap<>();
 		CommonAncestor currentMinAncestor = new CommonAncestor(null, Integer.MAX_VALUE);
 
-		for(V valB : listB){
-			Vertex<V> vertexB = graph.getVertexByValue(valB);
+		for(int valB : listB){
+			Vertex<Integer> vertexB = graph.getVertexByID(valB);
 			calculateAncestorDistances(vertexB, ancestors);		
-			for(V valA : listA){
-				Vertex<V> vertexA = graph.getVertexByValue(valA);
+			
+			for(int valA : listA){
+				Vertex<Integer> vertexA = graph.getVertexByID(valA);
 				CommonAncestor commonAncestor = compareAndFindCommonAncestor(vertexA, ancestors);
 				if(commonAncestor.getDistance() < currentMinAncestor.getDistance()){
 					currentMinAncestor.setDistance(commonAncestor.getDistance());
@@ -83,17 +88,18 @@ public class SAP<V> {
 		return currentMinAncestor;
 	}
 	
-	private void calculateAncestorDistances(Vertex<V> source, Map<Vertex<V>, Integer> ancestors){
-		LinkedList<Vertex<V>> notVisited = new LinkedList<>();
+	private void calculateAncestorDistances(Vertex<Integer> source, Map<Vertex<Integer>, Integer> ancestors){
+		LinkedList<Vertex<Integer>> notVisited = new LinkedList<>();
 		int distFromSource = 0;
 		notVisited.addFirst(source);
 		
 		while(!notVisited.isEmpty()){
-			Vertex<V> currentSource = notVisited.removeFirst();
+			Vertex<Integer> currentSource = notVisited.removeFirst();
+			
 			ancestors.put(currentSource, distFromSource++);
 			
 			for(Edge<Boolean> e : graph.outgoingEdges(currentSource)){
-				Vertex<V> target = graph.opposite(currentSource, e);
+				Vertex<Integer> target = graph.opposite(currentSource, e);
 				boolean targetNotVisited = (ancestors.get(target) == null ? true : false);
 				
 				if(targetNotVisited){
@@ -103,19 +109,19 @@ public class SAP<V> {
 		}	
 	}
 	
-	private CommonAncestor compareAndFindCommonAncestor(Vertex<V> v, Map<Vertex<V>, Integer> foundAncestors){
-		LinkedList<Vertex<V>> notVisited = new LinkedList<>();
+	private CommonAncestor compareAndFindCommonAncestor(Vertex<Integer> v, Map<Vertex<Integer>, Integer> foundAncestors){
+		LinkedList<Vertex<Integer>> notVisited = new LinkedList<>();
 		CommonAncestor currentAncestor = new CommonAncestor(null, Integer.MAX_VALUE);
 		int distFromV = 0;
 		
 		notVisited.addFirst(v);
 		
 		while(!notVisited.isEmpty()){
-			Vertex<V> source = notVisited.removeFirst();
+			Vertex<Integer> source = notVisited.removeFirst();
 			distFromV++;
 			
 			for(Edge<Boolean> e : graph.outgoingEdges(source)){
-				Vertex<V> target = graph.opposite(source, e);
+				Vertex<Integer> target = graph.opposite(source, e);
 				Integer distToTarget = foundAncestors.get(target);
 				boolean hasBeenVisited = (distToTarget == null ? false : true);
 				
@@ -134,12 +140,11 @@ public class SAP<V> {
 		return currentAncestor;
 	}
 
-	
 	private class CommonAncestor{
 		private int distance;
-		private Vertex<V> ancestor;
+		private Vertex<Integer> ancestor;
 		
-		public CommonAncestor(Vertex<V> v, int d){
+		public CommonAncestor(Vertex<Integer> v, int d){
 			distance = d;
 			ancestor = v;
 		}
@@ -148,7 +153,7 @@ public class SAP<V> {
 			return this.distance;
 		}
 		
-		public Vertex<V> getAncestor(){
+		public Vertex<Integer> getAncestor(){
 			return this.ancestor;
 		}
 	
@@ -156,13 +161,20 @@ public class SAP<V> {
 			this.distance = d;
 		}
 		
-		public void setAncestor(Vertex<V> v){
+		public void setAncestor(Vertex<Integer> v){
 			this.ancestor = v;
 		}
 	}
 	
 	// Unit testing
-	public static void main(String[] args){
+	public static void main(String[] args) throws FileNotFoundException{
+		Scanner digraphFile = new Scanner(new BufferedReader(new FileReader("digraph1.txt")));
+		Digraph<Boolean> graph = new Digraph<Boolean>(digraphFile);
+		SAP sap = new SAP(graph);
+		
+		int length = sap.length(1,6);
+		int ancestor = sap.ancestor(1,6);
+		System.out.printf("Length of pair 9 12 \n%d\n\nancestor \n%d", length, ancestor);
 		
 	}
 	
