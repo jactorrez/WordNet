@@ -1,20 +1,19 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.HashMap;
 import java.util.Scanner;
 
 public class Outcast {
-	WordNet wordNet;
+	private WordNet wordNet;
 	
 	public Outcast(WordNet W){
 		this.wordNet = W;
 	}
 	
-	// Given an array of WordNet nouns, return an outcast
+	/*
+	 *  Given an array of WordNet nouns, return an outcast
+	 */
 	public String outcast(String[] nouns){
-		
-		HashMap<String, HashMap<String, Integer>> pairs = new HashMap<>();
 		String outcastNoun = null;
 		int outcastDist = 0;
 		
@@ -25,6 +24,7 @@ public class Outcast {
 			for(int j = 0; j < len; j++){
 				if(i == j)
 					continue;
+				
 				String nounB = nouns[j];
 				
 				currentDist += wordNet.distance(nounA, nounB);
@@ -34,11 +34,13 @@ public class Outcast {
 				outcastDist = currentDist;
 				outcastNoun = nounA;
 			}
-		}
-		
+		}	
 		return outcastNoun;
 	}
 	
+	/*
+	 * Unit testing
+	 */
 	public static void main(String[] args){
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");
 		Outcast outcast = new Outcast(wn);
@@ -52,7 +54,11 @@ public class Outcast {
 				nouns[index++] = n;
 			}
 			
-			System.out.println("Outcast found: " + outcast.outcast(nouns));
+			long startTime = System.nanoTime();
+			System.out.println("Calculating outcast...");
+			System.out.println("Outcast is: " + outcast.outcast(nouns));
+			long endTime = System.nanoTime();
+			System.out.println("Found value after " + (endTime - startTime));
 			
 		} catch(FileNotFoundException e){
 			e.printStackTrace();

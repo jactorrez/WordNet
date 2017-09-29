@@ -125,11 +125,8 @@ public class WordNet {
 		int cached = getCachedDistance(nounA, nounB);
 		
 		if(cached != -1){
-			System.out.println("Retrieving cached value");
 			length = cached;
 		} else {
-			System.out.println("Value not stored in cache");
-
 			ArrayList<Integer> nounASets = synonymSets.get(nounA);
 			ArrayList<Integer> nounBSets = synonymSets.get(nounB);
 			
@@ -152,10 +149,8 @@ public class WordNet {
 		int cached = getCachedAncestor(nounA, nounB);
 		
 		if(cached != -1){
-			System.out.println("Retrieving cached value");
 			ancestor = cached;
 		} else{
-			System.out.println("Value not cached");
 			ArrayList<Integer> nounASets = synonymSets.get(nounA);
 			ArrayList<Integer> nounBSets = synonymSets.get(nounB);
 			ancestor = sap.ancestor(nounASets, nounBSets);
@@ -170,11 +165,11 @@ public class WordNet {
 	 * Retrieves the cached distance for two nouns 
 	 */
 	private int getCachedDistance(String nounA, String nounB){
-		if(distanceCache.get(nounA) == null){
+		if(distanceCache.get(nounA) == null || (distanceCache.get(nounA).get(nounB) == null)){
 			return -1;
 		}
-		
 		int ancestor = distanceCache.get(nounA).get(nounB);
+		
 		return ancestor;
 	}
 	
@@ -243,16 +238,16 @@ public class WordNet {
 	// Unit testing
 	public static void main(String[] args) {
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");	
-		Scanner userIn = new Scanner(System.in);
 		
-		while(userIn.hasNext()){
-			String[] nouns = userIn.nextLine().split(" ");
+		long totalTime = 0;
+		int iterationCount = 1000;
+		for(int i = 0; i < iterationCount; i++){
 			long startTime = System.nanoTime();
-			System.out.println("SAP is: " + wn.sap(nouns[0], nouns[1]));
+			wn.sap("leap", "resistance");
 			long endTime = System.nanoTime();
-			System.out.println("Method took " + ((endTime - startTime)) + " milliseconds to run");
+			totalTime += (endTime - startTime);
 		}
 		
-		userIn.close();
+		System.out.println("Average time taken with cache: " + (totalTime/iterationCount));
 	}
 }

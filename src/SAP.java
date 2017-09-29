@@ -11,24 +11,33 @@ import structs.graphs.Edge;
 import structs.graphs.Vertex;
 
 public class SAP {
-	Digraph<Boolean> graph;
+	
+	private Digraph<Boolean> graph;
 
-	// Constructor takes Digraph (not necessarily a DAG)
+	/*
+	 * Constructor takes a Digraph (not necessarily a DAG)
+	 */
 	public SAP(Digraph<Boolean> G){
 		this.graph = G;
 	}
 	
-	// Is the digraph a directed acyclic graph? 
+	/*
+	 * Checks if the digraph is a DAG
+	 */
 	public boolean isDAG(){
 		return graph.isDAG();
 	}
 	
-	// Is the digraph a rooted DAG?
+	/*
+	 * Checks if the digraph is rooted
+	 */
 	public boolean isRootedDAG(){
 		return graph.isRooted();
 	}
 	
-	// Length of shortest ancestral path between v and w; -1 if no such path
+	/*
+	 * Returns the length of the shortest-ancestral path between v and w; -1 if no such path exists
+	 */
 	public int length(int v, int w){
 		ArrayList<Integer> listA = new ArrayList<>(); 
 		listA.add(v);
@@ -39,7 +48,9 @@ public class SAP {
 		return length(listA, listB);
 	}
 	
-	// A common ancestor of v and w that participates in a shortest ancestral path
+	/*
+	 * Returns a common ancestor of v and w that participates in a shortest-ancestral path; -1 if no such path exists
+	 */
 	public int ancestor(int v, int w){
 		ArrayList<Integer> listA = new ArrayList<>(); 
 		listA.add(v);
@@ -49,14 +60,18 @@ public class SAP {
 		return ancestor(listA, listB);
 	}
 	
-	// Length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
+	/*
+	 * Returns the length of the shortest-ancestral path between any vertex in v and any vertex in w; -1 if no such path exists
+	 */
 	public int length(Iterable<Integer> v, Iterable<Integer> w){
 		CommonAncestor ancestor = findCommonAncestor(v, w);
 		int length = ancestor.getDistance();
 		return length;
 	}
 	
-	// A common ancestor that participates in shortest ancestral path; -1 if no such path
+	/*
+	 * Returns the common ancestor that participates in a shortest ancestral path; -1 if no such path exists
+	 */
 	public int ancestor(Iterable<Integer> v, Iterable<Integer> w){
 		CommonAncestor ancestor = findCommonAncestor(v, w);
 		if(ancestor.getAncestor() == null)
@@ -67,6 +82,9 @@ public class SAP {
 		return vertex;
 	}
 	
+	/*
+	 * Finds the common ancestor that participates in a shortest ancestral path for any vertex in listA and any vertex in listB
+	 */
 	private CommonAncestor findCommonAncestor(Iterable<Integer> listA, Iterable<Integer> listB){
 		HashMap<Vertex<Integer>, Integer> ancestors = new HashMap<>();
 		CommonAncestor currentMinAncestor = new CommonAncestor(null, Integer.MAX_VALUE);
@@ -88,6 +106,9 @@ public class SAP {
 		return currentMinAncestor;
 	}
 	
+	/*
+	 * Calculates and stores the distance(s) from a given source vertex to all of its ancestors
+	 */
 	private void calculateAncestorDistances(Vertex<Integer> source, Map<Vertex<Integer>, Integer> ancestors){
 		LinkedList<Vertex<Integer>> notVisited = new LinkedList<>();
 		int distFromSource = 0;
@@ -95,7 +116,6 @@ public class SAP {
 		
 		while(!notVisited.isEmpty()){
 			Vertex<Integer> currentSource = notVisited.removeFirst();
-			
 			ancestors.put(currentSource, distFromSource++);
 			
 			for(Edge<Boolean> e : graph.outgoingEdges(currentSource)){
@@ -109,6 +129,9 @@ public class SAP {
 		}	
 	}
 	
+	/*
+	 * Finds the common ancestor between two vertices that participates in their shortest-ancestral path 
+	 */
 	private CommonAncestor compareAndFindCommonAncestor(Vertex<Integer> v, Map<Vertex<Integer>, Integer> foundAncestors){
 		LinkedList<Vertex<Integer>> notVisited = new LinkedList<>();
 		CommonAncestor currentAncestor = new CommonAncestor(null, Integer.MAX_VALUE);
@@ -139,28 +162,46 @@ public class SAP {
 			
 		return currentAncestor;
 	}
-
+	
+	/* 
+	 * Internal CommonAncestor data-type to store a common ancestor found for a given pair of vertices
+	 */
 	public class CommonAncestor{
-		private int distance;
-		private Vertex<Integer> ancestor;
+		private int distance;				// minimum distance associated with this common ancestor instance
+		private Vertex<Integer> ancestor;	// vertex associated with this common ancestor instance
 		
+		/*
+		 * Constructor creates an instance of a CommonAncestor with the vertex of the ancestor v and its total path distance d
+		 */
 		public CommonAncestor(Vertex<Integer> v, int d){
-			distance = d;
-			ancestor = v;
+			this.distance = d;
+			this.ancestor = v;
 		}
 		
+		/*
+		 * Returns the minimum path distance associated with this CommonAncestor
+		 */
 		public int getDistance(){
 			return this.distance;
 		}
 		
+		/*
+		 * Returns the ancestor associated with this CommonAncestor
+		 */
 		public Vertex<Integer> getAncestor(){
 			return this.ancestor;
 		}
-	
+		
+		/*
+		 * Set  the minimum path distance associated with this CommonAncestor
+		 */
 		public void setDistance(int d){
 			this.distance = d;
 		}
 		
+		/*
+		 * Sets the ancestor vertex associated with this CommonAncestor
+		 */
 		public void setAncestor(Vertex<Integer> v){
 			this.ancestor = v;
 		}

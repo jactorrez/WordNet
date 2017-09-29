@@ -9,16 +9,25 @@ import structs.graphs.Vertex;
 public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 	private HashMap<Integer, Vertex<Integer>> vertexByID;
 
+	/*
+	 * Initializes a digraph
+	 */
 	public Digraph(){
 		super(true);
 		vertexByID = new HashMap<>();
 	}
 	
+	/*
+	 * Initializes a digraph with V vertices
+	 */
 	public Digraph(int V){
 		super(true);
 		vertexByID = new HashMap<>(V);
 	}
 	
+	/*
+	 * Initializes a digraph from the specified input stream
+	 */
 	public Digraph(Scanner file){
 		super(true);
 		Scanner graphContent = file;
@@ -42,22 +51,30 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 				w = insertVertex(w_id);
 				vertexByID.put(w_id, w);
 			}
-			
 			insertEdge(v, w, null);
 		}
 	}
 	
+	/*
+	 * Inserts a vertex into the digraph and stores a reference to it to access it via its value
+	 */
 	public Vertex<Integer> insertVertex(int val){
 		Vertex<Integer> v = super.insertVertex(val);
 		vertexByID.put(val, v);
 		return v;
 	}
 	
+	/*
+	 * Returns the vertex in the digraph corresponding to the given value
+	 */
 	public Vertex<Integer> getVertexByID(int val){
 		Vertex<Integer> v = vertexByID.get(val);
 		return v;
 	}
 	
+	/*
+	 * Checks whether this graph is rooted
+	 */
 	public boolean isRooted(){
 		for(Vertex<Integer> v : vertices()){
 			if(outDegree(v) == 0){
@@ -66,10 +83,12 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 				}
 			}	
 		} 
-
 		return false;
 	}
 	
+	/*
+	 * Checks whether the graph is connected starting from vertex v
+	 */
 	private boolean isConnected(Vertex<Integer> v){
 		HashMap<Vertex<Integer>, Boolean> marked = new HashMap<>();
 		int count = 0;
@@ -83,6 +102,9 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 		return false;
 	}
 	
+	/*
+	 * Finds all nodes reachable from vertex v
+	 */
 	private int reachableNodes(Vertex<Integer> v, Map<Vertex<Integer>, Boolean> marked, Integer markCount){
 		marked.put(v, true);
 		markCount++;
@@ -96,6 +118,9 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 		return markCount;
 	}
 	
+	/*
+	 * Performs depth-first search on this digraph, starting at vertex v
+	 */
 	private void DFS(Vertex<Integer> v, Map<Vertex<Integer>, Boolean> marked){
 		marked.put(v, true);
 		for(Edge<E> e : outgoingEdges(v)){
@@ -106,6 +131,9 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 		}
 	}
 	
+	/*
+	 * Checks whether this digraph is a directed acyclic graph
+	 */
 	public boolean isDAG(){
 		boolean hasSource = findSource();
 		
@@ -131,7 +159,10 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 		return isAcyclic;
 	}
 	
-	/* Quick way to check if the graph contains a cycle */
+	/*
+	 * Attempts to find a vertex with an in-degree of 0
+	 * If no vertex has this characteristic, the digraph is guaranteed to by cyclic
+	 */
 	public boolean findSource(){
 		boolean found = false;
 		
@@ -145,6 +176,9 @@ public class Digraph<E> extends AdjacencyMapGraph<Integer,E>{
 		return found;
 	}
 	
+	/*
+	 * Attempts to find a cycle starting from the given source vertex
+	 */
 	public boolean findCycle(Vertex<Integer> source, Map<Vertex<Integer>, Boolean> visited, Map<Vertex<Integer>, Boolean> visiting){
 		visiting.put(source, true);
 		boolean cycleFound = false; 
