@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+
 import structs.graphs.Vertex;
 
 public class WordNet {
@@ -14,7 +15,10 @@ public class WordNet {
 	private HashMap<String, ArrayList<Integer>> synonymSets = new HashMap<>(90000);
 	private Digraph<Boolean> wordNet = new Digraph<>();
 	private SAP sap;
-	
+	/* --- Caching previously made queries --- */
+	private HashMap<String, HashMap<String, Integer>> distanceCache = new HashMap<>();
+	private HashMap<String, HashMap<String, Integer>> ancestorCache = new HashMap<>();
+
 	/*
 	 * Constructor takes the name of the two input files
 	 */
@@ -96,7 +100,6 @@ public class WordNet {
 				temp_nouns.add(noun);
 			}
 		}
-		
 		return (new ArrayList<String>(temp_nouns));
 	}
 	
@@ -118,11 +121,22 @@ public class WordNet {
 		if((nounA == null || nounB == null) || (!isNoun(nounA)|| !isNoun(nounB))) 
 			throw new IllegalArgumentException("The noun given was either null or does not exist in the wordnet graph");
 		
-		ArrayList<Integer> nounASets = synonymSets.get(nounA);
-		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
+		int length = 0;
+		int cached = getCachedDistance(nounA, nounB);
 		
-		int length = sap.length(nounASets, nounBSets);
+		if(cached != -1){
+			System.out.println("Retrieving cached value");
+			length = cached;
+		} else {
+			System.out.println("Value not stored in cache");
 
+			ArrayList<Integer> nounASets = synonymSets.get(nounA);
+			ArrayList<Integer> nounBSets = synonymSets.get(nounB);
+			
+			length = sap.length(nounASets, nounBSets);
+			cacheDistance(nounA, nounB, length);
+		}
+			
 		return length;
 	}
 	
@@ -133,21 +147,112 @@ public class WordNet {
 	public String sap(String nounA, String nounB){
 		if(!isNoun(nounA)|| !isNoun(nounB))
 			throw new IllegalArgumentException("A noun which is not in any synset was given");
-				
-		ArrayList<Integer> nounASets = synonymSets.get(nounA);
-		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
 		
-		int ancestor = sap.ancestor(nounASets, nounBSets);
+		int ancestor = 0;
+		int cached = getCachedAncestor(nounA, nounB);
 		
+		if(cached != -1){
+			System.out.println("Retrieving cached value");
+			ancestor = cached;
+		} else{
+			System.out.println("Value not cached");
+			ArrayList<Integer> nounASets = synonymSets.get(nounA);
+			ArrayList<Integer> nounBSets = synonymSets.get(nounB);
+			ancestor = sap.ancestor(nounASets, nounBSets);
+			cacheAncestor(nounA, nounB, ancestor);
+		}
+
 		String ancestorSysnet = setById.get(ancestor);
-		
 		return ancestorSysnet;
+	}
+	
+	/* 
+	 * Retrieves the cached distance for two nouns 
+	 */
+	private int getCachedDistance(String nounA, String nounB){
+		if(distanceCache.get(nounA) == null){
+			return -1;
+		}
+		
+		int ancestor = distanceCache.get(nounA).get(nounB);
+		return ancestor;
+	}
+	
+	/*
+	 * Caches a given distance between two nouns
+	 */
+	private void cacheDistance(String nounA, String nounB, int dist){
+		HashMap<String, Integer> mapA;
+		HashMap<String, Integer> mapB;
+		
+		if(distanceCache.get(nounA) == null){
+			distanceCache.put(nounA, new HashMap<String, Integer>());
+			mapA = distanceCache.get(nounA);
+		} else{
+			mapA = distanceCache.get(nounA);
+		}
+		
+		if(distanceCache.get(nounB) == null){
+			distanceCache.put(nounB, new HashMap<String, Integer>());
+			mapB = distanceCache.get(nounB);
+		} else{
+			mapB = distanceCache.get(nounB);
+		}
+		
+		mapA.put(nounB, dist);
+		mapB.put(nounA, dist);
+	}
+	
+	/*
+	 * Retrieves a cached ancestor for two nouns 
+	 */
+	private int getCachedAncestor(String nounA, String nounB){
+		if(ancestorCache.get(nounA) == null){
+			return -1;
+		}
+		
+		int ancestor = ancestorCache.get(nounA).get(nounB);
+		return ancestor;
+	}
+	
+	/*
+	 * Caches a given ancestor for a given pair of nouns
+	 */
+	private void cacheAncestor(String nounA, String nounB, int id){
+		HashMap<String, Integer> mapA;
+		HashMap<String, Integer> mapB;
+		
+		if(ancestorCache.get(nounA) == null){
+			ancestorCache.put(nounA, new HashMap<String, Integer>());
+			mapA = ancestorCache.get(nounA);
+		} else{
+			mapA = ancestorCache.get(nounA);
+		}
+		
+		if(ancestorCache.get(nounB) == null){
+			ancestorCache.put(nounB, new HashMap<String, Integer>());
+			mapB = ancestorCache.get(nounB);
+		} else{
+			mapB = ancestorCache.get(nounB);
+		}
+		
+		mapA.put(nounB, id);
+		mapB.put(nounA, id);
 	}
 	
 	// Unit testing
 	public static void main(String[] args) {
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");	
-		System.out.println(wn.sap("transgression", "opposition"));
+		Scanner userIn = new Scanner(System.in);
+		
+		while(userIn.hasNext()){
+			String[] nouns = userIn.nextLine().split(" ");
+			long startTime = System.nanoTime();
+			System.out.println("SAP is: " + wn.sap(nouns[0], nouns[1]));
+			long endTime = System.nanoTime();
+			System.out.println("Method took " + ((endTime - startTime)) + " milliseconds to run");
+		}
+		
+		userIn.close();
 	}
-
 }

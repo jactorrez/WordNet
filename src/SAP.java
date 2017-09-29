@@ -140,7 +140,7 @@ public class SAP {
 		return currentAncestor;
 	}
 
-	private class CommonAncestor{
+	public class CommonAncestor{
 		private int distance;
 		private Vertex<Integer> ancestor;
 		
@@ -175,8 +175,5 @@ public class SAP {
 		int length = sap.length(1,6);
 		int ancestor = sap.ancestor(1,6);
 		System.out.printf("Length of pair 9 12 \n%d\n\nancestor \n%d", length, ancestor);
-		
 	}
-	
-	
 }
