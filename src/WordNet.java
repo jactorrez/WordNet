@@ -9,10 +9,11 @@ import java.util.Set;
 import structs.graphs.Vertex;
 
 public class WordNet {
-	public ArrayList<String> setById = new ArrayList<>();
-	public ArrayList<Vertex<Integer>> vertexById = new ArrayList<>();
-	public HashMap<String, ArrayList<Integer>> synonymSets = new HashMap<>(50000);
-	public Digraph<Boolean> wordNet = new Digraph<>();
+	private ArrayList<String> setById = new ArrayList<>();
+	private ArrayList<Vertex<Integer>> vertexById = new ArrayList<>();
+	private HashMap<String, ArrayList<Integer>> synonymSets = new HashMap<>(90000);
+	private Digraph<Boolean> wordNet = new Digraph<>();
+	private SAP sap;
 	
 	/*
 	 * Constructor takes the name of the two input files
@@ -25,19 +26,26 @@ public class WordNet {
 			Scanner hypernymsFile = new Scanner(new BufferedReader(new FileReader(hypernyms)))){
 			
 			while(synsetsFile.hasNextLine()){
+				// Split line using comma as delimiter to access the id, synset, and gloss by index
 				String[] synset = synsetsFile.nextLine().split(",");
+				
+				// Store the id of the current synset
 				int id = Integer.parseInt(synset[0]);
+				
+				// Store the current synset as a whole
 				String allSynonyms = synset[1];
+				
+				// Split the whole synset to access the individual nouns
 				String[] splitSynonyms = allSynonyms.split(" ");
 				
-				// Populate arraylist to access an entire synset by its corresponding ID
+				// Populate setByID to access an entire synset by its corresponding id
 				setById.add(allSynonyms);
 				
-				// Maintain a reference to a vertex created for a synset in the wordnet graph
-				// Allows constant-time access to a vertex corresponding to a synset
+				// Maintain a reference to the vertex created in the digraph
+				// Allows constant-time access to a vertex by using its id as the index
 				vertexById.add(wordNet.insertVertex(id));
 
-				// Keep track of synsets a given noun is in
+				// Populate synonymSets to keep track of which synsets a given noun appears in
 				for (String s : splitSynonyms){
 					ArrayList<Integer> list = synonymSets.get(s);
 					
@@ -50,23 +58,28 @@ public class WordNet {
 				}	
 			}
 			
-			// Link vertices with an 'is-a' relationship
+			// Link previously created vertices to signify 'is-a' relationship
 			while(hypernymsFile.hasNextLine()){
-				String[] hypernymSet = hypernymsFile.nextLine().split(",");
-				int length = hypernymSet.length;
-				
+				// Split line and use comma as a delimiter to access the 'from' index and 'to' indices 
+				String[] hypernymSet = hypernymsFile.nextLine().split(",");				
 				int fromId = Integer.parseInt(hypernymSet[0]);
+				// Get reference to vertex corresponding to the synset with id 'fromId'
 				Vertex<Integer> v = (Vertex<Integer>) vertexById.get(fromId);
 				
-				for(int i = 1; i < length; i++){
+				// Iterate through the line, attaching the previous vertex to its hypernyms
+				for(int i = 1, length = hypernymSet.length; i < length; i++){
 					int toId = Integer.parseInt(hypernymSet[i]);
 					Vertex<Integer> w = (Vertex<Integer>) vertexById.get(toId);
 					wordNet.insertEdge(v, w, true);	
 				}
 			}
 			
+			
+			// Check if the graph created is a rooted DAG, throw an exception if it's not  
 			if(!wordNet.isRooted())
 				throw new IllegalArgumentException("Input does not correspond to a rooted DAG");	
+			
+			sap = new SAP(wordNet); 
 			
 		} catch(FileNotFoundException e1){
 			e1.printStackTrace();
@@ -78,15 +91,13 @@ public class WordNet {
 	 */
 	public Iterable<String> nouns(){
 		Set<String> temp_nouns = new HashSet<>();
-		ArrayList<String> nouns;
 		for(String group : setById){
 			for(String noun : group.split(" ")){
 				temp_nouns.add(noun);
 			}
 		}
-		nouns = new ArrayList<>(temp_nouns);
 		
-		return nouns;
+		return (new ArrayList<String>(temp_nouns));
 	}
 	
 	/*
@@ -107,18 +118,11 @@ public class WordNet {
 		if((nounA == null || nounB == null) || (!isNoun(nounA)|| !isNoun(nounB))) 
 			throw new IllegalArgumentException("The noun given was either null or does not exist in the wordnet graph");
 		
-		SAP sap = new SAP(wordNet);
-		
 		ArrayList<Integer> nounASets = synonymSets.get(nounA);
 		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
 		
 		int length = sap.length(nounASets, nounBSets);
 
-		if(length == -1){
-			System.out.println("No common ancestor found");
-			return -1;
-		}
-		
 		return length;
 	}
 	
@@ -129,18 +133,11 @@ public class WordNet {
 	public String sap(String nounA, String nounB){
 		if(!isNoun(nounA)|| !isNoun(nounB))
 			throw new IllegalArgumentException("A noun which is not in any synset was given");
-		
-		SAP sap = new SAP(wordNet);
-		
+				
 		ArrayList<Integer> nounASets = synonymSets.get(nounA);
 		ArrayList<Integer> nounBSets = synonymSets.get(nounB);
 		
 		int ancestor = sap.ancestor(nounASets, nounBSets);
-		
-		if(ancestor == -1){
-			System.out.println("No common ancestor found");
-			return null;
-		}
 		
 		String ancestorSysnet = setById.get(ancestor);
 		
@@ -150,7 +147,7 @@ public class WordNet {
 	// Unit testing
 	public static void main(String[] args) {
 		WordNet wn = new WordNet("synsets.txt", "hypernyms.txt");	
-		//System.out.println(wn.distance("transgression", "opposition"));
+		System.out.println(wn.sap("transgression", "opposition"));
 	}
 
 }
