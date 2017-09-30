@@ -15,6 +15,7 @@ public class WordNet {
 	private HashMap<String, ArrayList<Integer>> synonymSets = new HashMap<>(90000);
 	private Digraph<Boolean> wordNet = new Digraph<>();
 	private SAP sap;
+	
 	/* --- Caching previously made queries --- */
 	private HashMap<String, HashMap<String, Integer>> distanceCache = new HashMap<>();
 	private HashMap<String, HashMap<String, Integer>> ancestorCache = new HashMap<>();
@@ -84,7 +85,6 @@ public class WordNet {
 				throw new IllegalArgumentException("Input does not correspond to a rooted DAG");	
 			
 			sap = new SAP(wordNet); 
-			
 		} catch(FileNotFoundException e1){
 			e1.printStackTrace();
 		}
@@ -142,8 +142,8 @@ public class WordNet {
 	 * in a shortest ancestral path
 	 */
 	public String sap(String nounA, String nounB){
-		if(!isNoun(nounA)|| !isNoun(nounB))
-			throw new IllegalArgumentException("A noun which is not in any synset was given");
+		if((nounA == null || nounB == null) || (!isNoun(nounA)|| !isNoun(nounB))) 
+			throw new IllegalArgumentException("The noun given was either null or does not exist in the wordnet graph");
 		
 		int ancestor = 0;
 		int cached = getCachedAncestor(nounA, nounB);

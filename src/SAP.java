@@ -18,6 +18,9 @@ public class SAP {
 	 * Constructor takes a Digraph (not necessarily a DAG)
 	 */
 	public SAP(Digraph<Boolean> G){
+		if(G == null)
+			throw new NullPointerException("Argument given is null");
+		
 		this.graph = G;
 	}
 	
@@ -64,6 +67,9 @@ public class SAP {
 	 * Returns the length of the shortest-ancestral path between any vertex in v and any vertex in w; -1 if no such path exists
 	 */
 	public int length(Iterable<Integer> v, Iterable<Integer> w){
+		if(v == null || w == null)
+			throw new NullPointerException("Argument given was null");
+		
 		CommonAncestor ancestor = findCommonAncestor(v, w);
 		int length = ancestor.getDistance();
 		return length;
@@ -73,6 +79,9 @@ public class SAP {
 	 * Returns the common ancestor that participates in a shortest ancestral path; -1 if no such path exists
 	 */
 	public int ancestor(Iterable<Integer> v, Iterable<Integer> w){
+		if(v == null || w == null)
+			throw new NullPointerException("Argument given was null");
+		
 		CommonAncestor ancestor = findCommonAncestor(v, w);
 		if(ancestor.getAncestor() == null)
 			return -1;
@@ -86,6 +95,9 @@ public class SAP {
 	 * Finds the common ancestor that participates in a shortest ancestral path for any vertex in listA and any vertex in listB
 	 */
 	private CommonAncestor findCommonAncestor(Iterable<Integer> listA, Iterable<Integer> listB){
+		if(listA == null || listB == null)
+			throw new NullPointerException("Argument given was null");
+		
 		HashMap<Vertex<Integer>, Integer> ancestors = new HashMap<>();
 		CommonAncestor currentMinAncestor = new CommonAncestor(null, Integer.MAX_VALUE);
 
@@ -110,6 +122,9 @@ public class SAP {
 	 * Calculates and stores the distance(s) from a given source vertex to all of its ancestors
 	 */
 	private void calculateAncestorDistances(Vertex<Integer> source, Map<Vertex<Integer>, Integer> ancestors){
+		if(source == null || ancestors == null)
+			throw new NullPointerException("Argument given was null");
+		
 		LinkedList<Vertex<Integer>> notVisited = new LinkedList<>();
 		int distFromSource = 0;
 		notVisited.addFirst(source);
@@ -133,6 +148,9 @@ public class SAP {
 	 * Finds the common ancestor between two vertices that participates in their shortest-ancestral path 
 	 */
 	private CommonAncestor compareAndFindCommonAncestor(Vertex<Integer> v, Map<Vertex<Integer>, Integer> foundAncestors){
+		if(v == null || foundAncestors == null)
+			throw new NullPointerException("Argument given was null");
+		
 		LinkedList<Vertex<Integer>> notVisited = new LinkedList<>();
 		CommonAncestor currentAncestor = new CommonAncestor(null, Integer.MAX_VALUE);
 		int distFromV = 0;
@@ -174,6 +192,9 @@ public class SAP {
 		 * Constructor creates an instance of a CommonAncestor with the vertex of the ancestor v and its total path distance d
 		 */
 		public CommonAncestor(Vertex<Integer> v, int d){
+			if(v == null)
+				throw new NullPointerException("Argument given was null");
+			
 			this.distance = d;
 			this.ancestor = v;
 		}
